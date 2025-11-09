@@ -27,6 +27,8 @@ class CalendarViewModel(private val repository: MoneyNoteRepository) : ViewModel
     // Trạng thái cho tài khoản đang chọn (0L = Tất cả tài khoản)
     private val _selectedAccountId = MutableStateFlow(0L)
     val selectedAccountId: StateFlow<Long> = _selectedAccountId
+    private val _selectedDay = MutableStateFlow(Date())
+    val selectedDay: StateFlow<Date> = _selectedDay
 
     // Danh sách tất cả tài khoản
     val allAccounts: StateFlow<List<Account>> = repository.allAccounts
@@ -55,6 +57,10 @@ class CalendarViewModel(private val repository: MoneyNoteRepository) : ViewModel
     // Hàm để chọn tài khoản
     fun selectAccount(accountId: Long) {
         _selectedAccountId.value = accountId
+    }
+    // Hàm khi người dùng nhấn vào một ngày trên lưới
+    fun onDaySelected(day: Date) {
+        _selectedDay.value = day
     }
 }
 

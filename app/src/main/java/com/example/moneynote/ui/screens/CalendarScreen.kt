@@ -1,5 +1,13 @@
 package com.example.moneynote.ui.screens
 
+// #### BẮT ĐẦU SỬA LỖI ####
+// THÊM CÁC IMPORT CHO HIỆU ỨNG VÀ ICON MỚI
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+// #### KẾT THÚC SỬA LỖI ####
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,12 +20,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -38,23 +50,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.moneynote.data.Account
 import com.example.moneynote.data.Transaction
 import com.example.moneynote.ui.CalendarViewModel
 import com.example.moneynote.ui.formatCurrency
+import com.example.moneynote.ui.generateCalendarDays
+import com.example.moneynote.ui.getWeekDayNames
+import com.example.moneynote.ui.isSameDay
+import com.example.moneynote.ui.expenseCategories
+import com.example.moneynote.ui.incomeCategories
+import com.example.moneynote.ui.theme.MoneyNoteTheme
+import com.example.moneynote.ui.theme.MutedGray
+import com.example.moneynote.ui.theme.NegativeRed
+import com.example.moneynote.ui.theme.PositiveGreen
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-// THÊM IMPORT MỚI
-import com.example.moneynote.ui.expenseCategories
-import com.example.moneynote.ui.incomeCategories
-import com.example.moneynote.ui.theme.PositiveGreen
-import com.example.moneynote.ui.theme.NegativeRed
-// THÊM CÁC IMPORT CHO PREVIEW
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.moneynote.ui.theme.MoneyNoteTheme
+
+// Data class (Giữ nguyên)
+data class DaySummary(
+    val date: Date,
+    val totalExpense: Double = 0.0,
+    val totalIncome: Double = 0.0,
+    val isCurrentMonth: Boolean,
+    val isSelected: Boolean
+)
 
 // #### MÀN HÌNH 2: HÀM "SMART" (CÓ VIEWMODEL) ####
 @Composable
@@ -64,14 +88,17 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
     val transactions by viewModel.transactionsForMonth.collectAsState()
     val accounts by viewModel.allAccounts.collectAsState()
     val selectedAccountId by viewModel.selectedAccountId.collectAsState()
+    val selectedDay by viewModel.selectedDay.collectAsState()
 
     CalendarScreenContent(
         selectedDate = selectedDate,
         transactions = transactions,
         accounts = accounts,
         selectedAccountId = selectedAccountId,
+        selectedDay = selectedDay,
         onAccountSelected = { viewModel.selectAccount(it) },
-        onChangeMonth = { viewModel.changeMonth(it) }
+        onChangeMonth = { viewModel.changeMonth(it) },
+        onDaySelected = { viewModel.onDaySelected(it) }
     )
 }
 
@@ -82,19 +109,48 @@ fun CalendarScreenContent(
     transactions: List<Transaction>,
     accounts: List<Account>,
     selectedAccountId: Long,
+    selectedDay: Date,
     onAccountSelected: (Long) -> Unit,
-    onChangeMonth: (Int) -> Unit
+    onChangeMonth: (Int) -> Unit,
+    onDaySelected: (Date) -> Unit
 ) {
     // Định dạng ngày tháng
     val monthFormat = SimpleDateFormat("MMMM, yyyy", Locale("vi", "VN"))
     val dayFormat = SimpleDateFormat("dd/MM (E)", Locale("vi", "VN"))
+    val dayOnlyFormat = SimpleDateFormat("d", Locale.getDefault())
+    val weekDayNames = getWeekDayNames()
 
-    // Tính toán tổng thu, chi, tổng
+    // 1. Thêm trạng thái Ẩn/Hiện
+    var isCalendarExpanded by remember { mutableStateOf(true) }
+
+    // Tính toán tổng thu, chi, tổng CỦA THÁNG
     val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
     val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
     val totalNet = totalIncome - totalExpense
 
-    // Nhóm giao dịch theo ngày
+    // Tạo danh sách 42 ngày cho lưới lịch
+    val calendarDays = generateCalendarDays(selectedDate)
+
+    // Tính toán Thu/Chi cho từng ngày
+    val daysWithSummaries = calendarDays.map { day ->
+        val dayTransactions = transactions.filter {
+            isSameDay(it.date, day)
+        }
+        val cal1 = Calendar.getInstance().apply { time = day }
+        val cal2 = Calendar.getInstance().apply { time = selectedDate }
+        val isCurrentMonth = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH)
+
+        DaySummary(
+            date = day,
+            totalIncome = dayTransactions.filter { it.type == "income" }.sumOf { it.amount },
+            totalExpense = dayTransactions.filter { it.type == "expense" }.sumOf { it.amount },
+            isCurrentMonth = isCurrentMonth,
+            isSelected = isSameDay(day, selectedDay)
+        )
+    }
+
+    // Nhóm giao dịch theo ngày (cho danh sách ở cuối)
     val groupedTransactions = transactions
         .sortedByDescending { it.date }
         .groupBy {
@@ -112,7 +168,7 @@ fun CalendarScreenContent(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // 1. Tiêu đề "Lịch" và Bộ lọc
+        // 1. Tiêu đề "Lịch" và Icon Tìm kiếm
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -123,15 +179,12 @@ fun CalendarScreenContent(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
             )
-            // Nút bộ lọc tài khoản
-            AccountFilterDropdown(
-                accounts = accounts,
-                selectedAccountId = selectedAccountId,
-                onAccountSelected = onAccountSelected
-            )
+            IconButton(onClick = { /* (Tạm thời) Chưa làm gì */ }) {
+                Icon(Icons.Default.Search, contentDescription = "Tìm kiếm")
+            }
         }
 
-        // 2. Bộ chọn tháng
+        // 2. Bộ chọn tháng (có thể Ẩn/Hiện)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -142,17 +195,66 @@ fun CalendarScreenContent(
             IconButton(onClick = { onChangeMonth(-1) }) {
                 Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Tháng trước")
             }
-            Text(
-                text = monthFormat.format(selectedDate).replaceFirstChar { it.titlecase() },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+
+            // 2. Làm cho Text và Icon có thể nhấn để Ẩn/Hiện
+            Row(
+                modifier = Modifier.clickable { isCalendarExpanded = !isCalendarExpanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = monthFormat.format(selectedDate).replaceFirstChar { it.titlecase() },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Icon(
+                    imageVector = if (isCalendarExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (isCalendarExpanded) "Thu gọn" else "Mở rộng"
+                )
+            }
+
             IconButton(onClick = { onChangeMonth(1) }) {
                 Icon(Icons.Default.ArrowForwardIos, contentDescription = "Tháng sau")
             }
         }
 
-        // 3. Thẻ tóm tắt tháng
+        // 3. Gói Lịch vào AnimatedVisibility
+        AnimatedVisibility(visible = isCalendarExpanded) {
+            Column {
+                // 3.1 Tiêu đề các ngày trong tuần (T2, T3...)
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    weekDayNames.forEach { dayName ->
+                        Text(
+                            text = dayName,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 3.2 Lưới Lịch
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(7),
+                    modifier = Modifier.fillMaxWidth(),
+                    // TẮT cuộn (để LazyColumn chính cuộn)
+                    userScrollEnabled = false
+                ) {
+                    items(daysWithSummaries) { daySummary ->
+                        CalendarDayCell(
+                            summary = daySummary,
+                            dayFormat = dayOnlyFormat,
+                            onClick = { onDaySelected(daySummary.date) }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 5. Thẻ tóm tắt tháng
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(4.dp),
@@ -172,20 +274,20 @@ fun CalendarScreenContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 4. Danh sách giao dịch (đã nhóm)
+        // 6. Danh sách giao dịch (CHO CẢ THÁNG)
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(), // Chiếm phần còn lại
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (transactions.isEmpty()) {
                 item {
                     Text(
-                        text = "Không có giao dịch nào trong tháng.",
+                        text = "Không có giao dịch nào trong tháng này.",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 32.dp)
+                            .padding(top = 16.dp)
                     )
                 }
             } else {
@@ -231,7 +333,7 @@ fun CalendarScreenContent(
     }
 }
 
-// ... (AccountFilterDropdown giữ nguyên) ...
+// Bộ lọc tài khoản (Không dùng, nhưng giữ lại)
 @Composable
 fun AccountFilterDropdown(
     accounts: List<Account>,
@@ -269,44 +371,43 @@ fun AccountFilterDropdown(
 }
 
 
-// ... (SummaryItem giữ nguyên) ...
+// Mục tóm tắt (Giữ nguyên)
 @Composable
 fun SummaryItem(title: String, amount: Double, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) // Màu xám mờ
+        Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = formatCurrency(amount),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = color // <-- Áp dụng màu (PositiveGreen/NegativeRed)
+            color = color
         )
     }
 }
 
-// ... (TransactionRow giữ nguyên) ...
+// Một hàng giao dịch (Giữ nguyên)
 @Composable
 fun TransactionRow(transaction: Transaction, accountName: String) {
-    // TÌM CATEGORY ĐỂ LẤY ICON VÀ MÀU
     val category = (expenseCategories + incomeCategories).find { it.name == transaction.category }
     val icon = category?.icon ?: Icons.Default.QuestionMark
     val tint = category?.color ?: MaterialTheme.colorScheme.onSurfaceVariant
 
     val amountColor = if (transaction.type == "expense")
-        NegativeRed // <-- Dùng màu đỏ
-    else PositiveGreen // <-- Dùng màu xanh
+        NegativeRed
+    else PositiveGreen
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp), // Tăng padding
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = transaction.category,
             modifier = Modifier.size(40.dp),
-            tint = tint // <-- ÁP DỤNG MÀU ICON
+            tint = tint
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -315,9 +416,7 @@ fun TransactionRow(transaction: Transaction, accountName: String) {
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
             )
-            // Hiển thị tên tài khoản và ghi chú
             Text(
-                // SỬA: Chỉ hiển thị dấu ngoặc nếu có ghi chú
                 text = (transaction.note?.plus(" ") ?: "") + "($accountName)",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -333,13 +432,80 @@ fun TransactionRow(transaction: Transaction, accountName: String) {
     }
 }
 
+// #### BẮT ĐẦU SỬA LỖI (LÀM GỌN LỊCH 1/2) ####
+@Composable
+fun CalendarDayCell(
+    summary: DaySummary,
+    dayFormat: SimpleDateFormat,
+    onClick: () -> Unit
+) {
+    val alpha = if (summary.isCurrentMonth) 1.0f else 0.4f
+    val dayColor = if (summary.isCurrentMonth) MaterialTheme.colorScheme.onSurface else MutedGray
 
-// #### THÊM HÀM PREVIEW NÀY VÀO CUỐI TỆP ####
+    val border = if (summary.isSelected) {
+        BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+    } else {
+        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            // SỬA: Giảm chiều cao từ 65.dp xuống 50.dp
+            .height(50.dp)
+            .padding(1.dp), // Giữ nguyên
+        shape = MaterialTheme.shapes.small,
+        border = border,
+        colors = CardDefaults.cardColors(
+            containerColor = if (summary.isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+        ),
+        onClick = onClick
+    ) {
+        Column(
+            // SỬA: Giảm padding
+            modifier = Modifier.padding(1.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(
+                text = dayFormat.format(summary.date),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = dayColor.copy(alpha = alpha)
+            )
+            // SỬA: Giảm khoảng cách
+            Spacer(modifier = Modifier.height(1.dp))
+
+            if (summary.totalIncome > 0) {
+                Text(
+                    text = formatCurrency(summary.totalIncome),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, lineHeight = 9.sp),
+                    color = PositiveGreen.copy(alpha = alpha),
+                    maxLines = 1,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (summary.totalExpense > 0) {
+                Text(
+                    text = formatCurrency(summary.totalExpense),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, lineHeight = 9.sp),
+                    color = NegativeRed.copy(alpha = alpha),
+                    maxLines = 1,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+// #### KẾT THÚC SỬA LỖI ####
+
+
+// #### HÀM PREVIEW (Giữ nguyên) ####
 @Preview(showBackground = true)
 @Composable
 fun CalendarScreenPreview() {
     MoneyNoteTheme(darkTheme = true) {
-        // Tạo dữ liệu giả (mock data)
         val mockAccounts = listOf(
             Account(1, "Tiền mặt", 0.0, "wallet", "#FFFFFF"),
             Account(2, "Ngân hàng", 0.0, "account_balance", "#FFFFFF")
@@ -355,8 +521,10 @@ fun CalendarScreenPreview() {
             transactions = mockTransactions,
             accounts = mockAccounts,
             selectedAccountId = 0L,
+            selectedDay = Date(),
             onAccountSelected = {},
-            onChangeMonth = {}
+            onChangeMonth = {},
+            onDaySelected = {}
         )
     }
 }
