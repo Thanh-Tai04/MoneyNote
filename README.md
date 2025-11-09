@@ -30,7 +30,7 @@ Lưu trữ Dữ liệu: Room Database (dùng Coroutines và Flow để xử lý 
 
 Clone Repository:
 
-git clone [DÁN_URL_REPOSITORY_CỦA_BẠN_VÀO_ĐÂY]
+git clone [https://github.com/Thanh-Tai04/MoneyNote.git]
 
 
 Mở Dự án: Mở thư mục dự án trong Android Studio.
