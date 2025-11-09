@@ -22,6 +22,17 @@ val PositiveGreen = Color(0xFF3FB950)
 val NegativeRed = Color(0xFFF85149)
 val WarningOrange = Color(0xFFFFA726)
 
+// #### BẮT ĐẦU THÊM MỚI (MÀU DANH MỤC) ####
+// Đây là các màu bị thiếu mà CategoryData.kt đang cần
+val CategoryRed = Color(0xFFF47068)
+val CategoryYellow = Color(0xFFE8B923)
+val CategoryGreen = Color(0xFF3FB950) // (Dùng chung PositiveGreen)
+val CategoryBlue = Color(0xFF58A6FF)
+val CategoryPurple = Color(0xFFBC81EC)
+val CategoryPink = Color(0xFFF778BA)
+// #### KẾT THÚC THÊM MỚI ####
+
+
 // (Màu cũ - không dùng nữa)
 // val Purple80 = Color(0xFFD0BCFF)
 // val PurpleGrey80 = Color(0xFFCCC2DC)

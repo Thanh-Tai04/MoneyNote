@@ -2,6 +2,7 @@ package com.example.moneynote.ui.screens
 
 // TẤT CẢ IMPORT CẦN THIẾT
 import com.example.moneynote.ui.Category
+import com.example.moneynote.ui.formatCurrency
 import com.example.moneynote.ui.incomeCategories
 import com.example.moneynote.ui.expenseCategories
 import androidx.compose.foundation.clickable
@@ -22,6 +23,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+// #### BẮT ĐẦU SỬA LỖI (Thêm icon "Chỉnh sửa") ####
+import androidx.compose.material.icons.filled.MoreHoriz
+// #### KẾT THÚC SỬA LỖI ####
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,6 +39,9 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+// #### BẮT ĐẦU SỬA LỖI (Thêm Snackbar) ####
+import androidx.compose.material3.SnackbarHostState
+// #### KẾT THÚC SỬA LỖI ####
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -48,6 +55,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -66,19 +74,36 @@ import androidx.compose.ui.text.input.ImeAction
 // IMPORT CHO PREVIEW
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.moneynote.ui.theme.MoneyNoteTheme
-// #### BẮT ĐẦU SỬA LỖI - THÊM IMPORT MỚI ####
 import com.example.moneynote.ui.CurrencyVisualTransformation
+// #### BẮT ĐẦU SỬA LỖI (Thêm NavController, Snackbar, Coroutine, MutedGray) ####
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.example.moneynote.ui.theme.MutedGray
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 // #### KẾT THÚC SỬA LỖI ####
 
 
 // #### MÀN HÌNH 1: HÀM "SMART" (CÓ VIEWMODEL) ####
 @Composable
-fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
+fun AddTransactionScreen(
+    viewModel: AddTransactionViewModel,
+    // #### BẮT ĐẦU SỬA LỖI (Thêm tham số mới) ####
+    navController: NavHostController,
+    snackbarHostState: SnackbarHostState,
+    scope: CoroutineScope
+    // #### KẾT THÚC SỬA LỖI ####
+) {
     // Lấy danh sách tài khoản từ ViewModel
     val accounts by viewModel.allAccounts.collectAsState()
 
     AddTransactionScreenContent(
         accounts = accounts,
+        // #### BẮT ĐẦU SỬA LỖI (Truyền các tham số mới) ####
+        navController = navController,
+        snackbarHostState = snackbarHostState,
+        scope = scope,
+        // #### KẾT THÚC SỬA LỖI ####
         onAddTransaction = { type, date, amount, category, note, accountId ->
             viewModel.addTransaction(type, date, amount, category, note, accountId)
         }
@@ -90,36 +115,34 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
 @Composable
 fun AddTransactionScreenContent(
     accounts: List<Account>,
+    // #### BẮT ĐẦU SỬA LỖI (Thêm tham số mới) ####
+    navController: NavHostController,
+    snackbarHostState: SnackbarHostState,
+    scope: CoroutineScope,
+    // #### KẾT THÚC SỬA LỖI ####
     onAddTransaction: (String, Date, Double, String, String?, Long) -> Unit
 ) {
-    // Trạng thái (State) cho toàn màn hình
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Chi tiêu, 1: Thu nhập
+    // ... (Các State giữ nguyên) ...
+    var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Chi tiêu", "Thu nhập")
-
-    // Trạng thái cho Form
     var amount by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var selectedAccount by remember { mutableStateOf<Account?>(null) }
     var selectedDate by remember { mutableStateOf(Date()) }
     var showDatePicker by remember { mutableStateOf(false) }
-
-    // Lấy bộ điều khiển bàn phím (PHẢI NẰM TRONG HÀM COMPOSABLE)
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Tự động chọn "Tiền mặt" làm mặc định
+    // ... (LaunchedEffect và resetForm giữ nguyên) ...
     LaunchedEffect(accounts) {
         if (selectedAccount == null && accounts.isNotEmpty()) {
             selectedAccount = accounts.find { it.name == "Tiền mặt" } ?: accounts.first()
         }
     }
-
-    // Hàm reset form
     fun resetForm() {
         amount = ""
         note = ""
         selectedCategory = null
-        // Giữ lại tài khoản và ngày đã chọn
     }
 
     Column(
@@ -127,15 +150,13 @@ fun AddTransactionScreenContent(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // 1. Tiêu đề "Sổ thu chi"
+        // ... (Tiêu đề, Tabs, Form (Ngày, Tài khoản, Ghi chú, Số tiền) giữ nguyên) ...
         Text(
             text = "Sổ thu chi",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-
-        // 2. TabRow (Chi tiêu / Thu nhập)
         TabRow(selectedTabIndex = selectedTab) {
             tabs.forEachIndexed { index, title ->
                 Tab(
@@ -148,11 +169,7 @@ fun AddTransactionScreenContent(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 3. Form nhập liệu chung
-        // Chọn ngày
+        Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = SimpleDateFormat("dd/MM/yyyy (E)", Locale.getDefault()).format(selectedDate),
             onValueChange = {},
@@ -167,10 +184,7 @@ fun AddTransactionScreenContent(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Chọn tài khoản (Dropdown)
+        Spacer(modifier = Modifier.height(4.dp))
         var accountDropdownExpanded by remember { mutableStateOf(false) }
         ExposedDropdownMenuBox(
             expanded = accountDropdownExpanded,
@@ -183,7 +197,7 @@ fun AddTransactionScreenContent(
                 label = { Text("Tài khoản") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountDropdownExpanded) },
                 modifier = Modifier
-                    .menuAnchor() // Quan trọng
+                    .menuAnchor()
                     .fillMaxWidth()
             )
             ExposedDropdownMenu(
@@ -201,23 +215,16 @@ fun AddTransactionScreenContent(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Ghi chú
+        Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = note,
             onValueChange = { note = it },
             label = { Text("Ghi chú") },
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Số tiền
+        Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = amount,
-            // SỬA: Chỉ cho phép nhập số
             onValueChange = {
                 if (it.all { char -> char.isDigit() }) {
                     amount = it
@@ -225,29 +232,26 @@ fun AddTransactionScreenContent(
             },
             label = { Text("Số tiền") },
             trailingIcon = { Text("đ", style = MaterialTheme.typography.bodyLarge) },
-            // SỬA: Thêm VisualTransformation và KeyboardOptions
             visualTransformation = CurrencyVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done // Yêu cầu nút "Done" (Hoàn tất)
+                imeAction = ImeAction.Done
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    keyboardController?.hide() // Ẩn bàn phím khi nhấn "Done"
+                    keyboardController?.hide()
                 }
             ),
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 4. Lưới Danh mục
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Danh mục",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
+        // 4. Lưới Danh mục
         val currentCategories = if (selectedTab == 0) expenseCategories else incomeCategories
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 90.dp),
@@ -262,6 +266,20 @@ fun AddTransactionScreenContent(
                     onClick = { selectedCategory = category }
                 )
             }
+
+            // #### BẮT ĐẦU SỬA LỖI (Thêm thẻ "Chỉnh sửa") ####
+            item {
+                val editCategory = Category("Chỉnh sửa", Icons.Default.MoreHoriz, MutedGray)
+                CategoryItem(
+                    category = editCategory,
+                    isSelected = false,
+                    onClick = {
+                        // Điều hướng đến màn hình quản lý
+                        navController.navigate("category_management")
+                    }
+                )
+            }
+            // #### KẾT THÚC SỬA LỖI ####
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -269,12 +287,10 @@ fun AddTransactionScreenContent(
         // 5. Nút Nhập
         Button(
             onClick = {
-                // SỬA: Chuyển chuỗi "5.000.000" về "5000000" trước khi chuyển sang Double
                 val amountDouble = amount.replace(".", "").toDoubleOrNull()
 
-                // Kiểm tra dữ liệu
                 if (amountDouble != null && amountDouble > 0 && selectedCategory != null && selectedAccount != null) {
-                    onAddTransaction( // Gọi sự kiện
+                    onAddTransaction(
                         if (selectedTab == 0) "expense" else "income",
                         selectedDate,
                         amountDouble,
@@ -282,12 +298,26 @@ fun AddTransactionScreenContent(
                         note.takeIf { it.isNotBlank() },
                         selectedAccount!!.id
                     )
-                    // Reset form sau khi nhập
+
+                    // #### BẮT ĐẦU SỬA LỖI (Hiển thị Snackbar) ####
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Đã thêm giao dịch ${formatCurrency(amountDouble)}",
+                            duration = androidx.compose.material3.SnackbarDuration.Short
+                        )
+                    }
+                    // #### KẾT THÚC SỬA LỖI ####
+
                     resetForm()
-                    // Ẩn bàn phím (nếu đang mở)
                     keyboardController?.hide()
                 } else {
-                    // (Tùy chọn) Hiển thị thông báo lỗi cho người dùng
+                    // (Tùy chọn) Hiển thị thông báo lỗi
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Vui lòng điền đủ thông tin (Số tiền, Danh mục, Tài khoản)",
+                            duration = androidx.compose.material3.SnackbarDuration.Short
+                        )
+                    }
                 }
             },
             modifier = Modifier
@@ -301,7 +331,7 @@ fun AddTransactionScreenContent(
         }
     }
 
-    // Hiển thị DatePickerDialog khi showDatePicker == true
+    // ... (DatePickerDialog giữ nguyên) ...
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate.time,
@@ -330,7 +360,7 @@ fun AddTransactionScreenContent(
     }
 }
 
-// Composable cho một mục danh mục
+// ... (CategoryItem giữ nguyên) ...
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryItem(
@@ -341,25 +371,21 @@ fun CategoryItem(
     Card(
         onClick = onClick,
         modifier = Modifier.size(90.dp),
-        // Áp dụng màu nền (Surface) và màu khi được chọn (PrimaryContainer)
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surface // <-- Dùng màu CardNight
+            else MaterialTheme.colorScheme.surface
         ),
-        // Thêm đổ bóng
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            // SỬA: verticalAlignment thành verticalArrangement
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = category.icon,
                 contentDescription = category.name,
                 modifier = Modifier.size(32.dp),
-                // LẤY MÀU TỪ CATEGORY
                 tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else category.color
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -367,7 +393,6 @@ fun CategoryItem(
                 text = category.name,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
-                // Màu chữ (trắng mờ hoặc trắng)
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
             )
         }
@@ -375,12 +400,11 @@ fun CategoryItem(
 }
 
 
-// #### HÀM PREVIEW (ĐỂ XEM TRƯỚC GIAO DIỆN) ####
+// ... (Hàm Preview giữ nguyên) ...
 @Preview(showBackground = true)
 @Composable
 fun AddTransactionScreenPreview() {
     MoneyNoteTheme(darkTheme = true) {
-        // Tạo dữ liệu giả (mock data)
         val mockAccounts = listOf(
             Account(1, "Tiền mặt", 0.0, "wallet", "#FFFFFF"),
             Account(2, "Ngân hàng", 0.0, "account_balance", "#FFFFFF")
@@ -388,7 +412,10 @@ fun AddTransactionScreenPreview() {
 
         AddTransactionScreenContent(
             accounts = mockAccounts,
-            onAddTransaction = { _, _, _, _, _, _ -> } // Hàm rỗng
+            navController = rememberNavController(),
+            snackbarHostState = remember { SnackbarHostState() },
+            scope = rememberCoroutineScope(),
+            onAddTransaction = { _, _, _, _, _, _ -> }
         )
     }
 }
