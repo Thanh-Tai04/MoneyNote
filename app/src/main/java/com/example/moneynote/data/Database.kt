@@ -1,4 +1,4 @@
-package com.example.moneynote.data // Đảm bảo package name này đúng
+package com.example.moneynote.data
 
 import android.content.Context
 import androidx.room.ColumnInfo
