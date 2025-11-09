@@ -1,8 +1,10 @@
 package com.example.moneynote.ui
 
-// THÊM 2 DÒNG NÀY:
-import java.text.NumberFormat
-import java.util.Locale
+// XÓA CÁC IMPORT CŨ
+// import java.text.NumberFormat
+// import java.util.Locale
+// THÊM IMPORT MỚI
+import java.text.DecimalFormat
 // ---
 import java.util.Calendar
 import java.util.Date
@@ -51,15 +53,25 @@ object DateUtils {
     }
 }
 
-// #### THÊM HÀM MỚI NÀY VÀO CUỐI TỆP ####
+// #### BẮT ĐẦU SỬA LỖI ĐỊNH DẠNG TIỀN TỆ ####
 /**
- * Định dạng số (Double) thành chuỗi tiền tệ (ví dụ: "3.000.000đ")
+ * Định dạng số (Double) thành chuỗi tiền tệ
+ * (Ví dụ: 5000000.0 -> "5.000.000đ")
  */
 fun formatCurrency(amount: Double): String {
-    val locale = Locale("vi", "VN")
-    val format = NumberFormat.getCurrencyInstance(locale)
-    // Thay thế "₫" bằng "đ" và loại bỏ phần ".00"
-    return format.format(amount)
-        .replace(Regex("\\.00|\\s?₫"), "đ")
-        .replace(",", ".") // Đổi dấu phẩy thành dấu chấm
+    // Tạo một định dạng số
+    // #,##0 đảm bảo sử dụng dấu phân cách (ví dụ: 5.000.000)
+    // 'đ' là ký tự đơn vị tiền tệ ở cuối
+    val formatter = DecimalFormat("#,##0'đ'")
+
+    // Lấy các ký hiệu định dạng (dấu phẩy, dấu chấm)
+    val symbols = formatter.decimalFormatSymbols.apply {
+        // Đặt ký tự phân cách hàng nghìn là dấu CHẤM (.)
+        groupingSeparator = '.'
+    }
+    formatter.decimalFormatSymbols = symbols
+
+    // Trả về chuỗi đã định dạng
+    return formatter.format(amount)
 }
+// #### KẾT THÚC SỬA LỖI ####

@@ -52,9 +52,11 @@ import com.example.moneynote.ui.expenseCategories
 import com.example.moneynote.ui.incomeCategories
 import com.example.moneynote.ui.theme.PositiveGreen
 import com.example.moneynote.ui.theme.NegativeRed
+// THÊM CÁC IMPORT CHO PREVIEW
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.moneynote.ui.theme.MoneyNoteTheme
 
-// #### MÀN HÌNH 2: LỊCH ####
-
+// #### MÀN HÌNH 2: HÀM "SMART" (CÓ VIEWMODEL) ####
 @Composable
 fun CalendarScreen(viewModel: CalendarViewModel) {
     // Lấy trạng thái (State) từ ViewModel
@@ -63,6 +65,26 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
     val accounts by viewModel.allAccounts.collectAsState()
     val selectedAccountId by viewModel.selectedAccountId.collectAsState()
 
+    CalendarScreenContent(
+        selectedDate = selectedDate,
+        transactions = transactions,
+        accounts = accounts,
+        selectedAccountId = selectedAccountId,
+        onAccountSelected = { viewModel.selectAccount(it) },
+        onChangeMonth = { viewModel.changeMonth(it) }
+    )
+}
+
+// #### MÀN HÌNH 2: HÀM "DUMB" (CHỈ CÓ UI) ####
+@Composable
+fun CalendarScreenContent(
+    selectedDate: Date,
+    transactions: List<Transaction>,
+    accounts: List<Account>,
+    selectedAccountId: Long,
+    onAccountSelected: (Long) -> Unit,
+    onChangeMonth: (Int) -> Unit
+) {
     // Định dạng ngày tháng
     val monthFormat = SimpleDateFormat("MMMM, yyyy", Locale("vi", "VN"))
     val dayFormat = SimpleDateFormat("dd/MM (E)", Locale("vi", "VN"))
@@ -105,7 +127,7 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
             AccountFilterDropdown(
                 accounts = accounts,
                 selectedAccountId = selectedAccountId,
-                onAccountSelected = { viewModel.selectAccount(it) }
+                onAccountSelected = onAccountSelected
             )
         }
 
@@ -117,7 +139,7 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = { viewModel.changeMonth(-1) }) {
+            IconButton(onClick = { onChangeMonth(-1) }) {
                 Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Tháng trước")
             }
             Text(
@@ -125,7 +147,7 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            IconButton(onClick = { viewModel.changeMonth(1) }) {
+            IconButton(onClick = { onChangeMonth(1) }) {
                 Icon(Icons.Default.ArrowForwardIos, contentDescription = "Tháng sau")
             }
         }
@@ -134,7 +156,6 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(4.dp),
-            // SỬA: Dùng màu nền Surface (CardNight) từ Theme
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Row(
@@ -143,7 +164,6 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                // SỬA: Dùng màu PositiveGreen và NegativeRed từ Theme
                 SummaryItem(title = "Thu nhập", amount = totalIncome, color = PositiveGreen)
                 SummaryItem(title = "Chi tiêu", amount = totalExpense, color = NegativeRed)
                 SummaryItem(title = "Tổng", amount = totalNet, color = MaterialTheme.colorScheme.onSurface)
@@ -191,7 +211,6 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
                             Text(
                                 text = formatCurrency(dailyTotal),
                                 style = MaterialTheme.typography.bodyMedium,
-                                // SỬA: Dùng màu PositiveGreen và NegativeRed từ Theme
                                 color = if (dailyTotal >= 0) PositiveGreen else NegativeRed
                             )
                         }
@@ -200,17 +219,11 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
 
                     // Danh sách giao dịch của ngày đó
                     items(transactionsOnDay) { transaction ->
-                        // #### BẮT ĐẦU SỬA LỖI ####
-                        // Lấy tên tài khoản từ ID
-                        // (Mặc định là "Không rõ" nếu không tìm thấy)
                         val accountName = accounts.find { it.id == transaction.accountId }?.name ?: "Không rõ"
-
-                        // Truyền accountName vào
                         TransactionRow(
                             transaction = transaction,
                             accountName = accountName
                         )
-                        // #### KẾT THÚC SỬA LỖI ####
                     }
                 }
             }
@@ -218,7 +231,7 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
     }
 }
 
-// Bộ lọc tài khoản
+// ... (AccountFilterDropdown giữ nguyên) ...
 @Composable
 fun AccountFilterDropdown(
     accounts: List<Account>,
@@ -256,7 +269,7 @@ fun AccountFilterDropdown(
 }
 
 
-// Mục tóm tắt (Thu nhập, Chi tiêu, Tổng)
+// ... (SummaryItem giữ nguyên) ...
 @Composable
 fun SummaryItem(title: String, amount: Double, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -271,7 +284,7 @@ fun SummaryItem(title: String, amount: Double, color: Color) {
     }
 }
 
-// Một hàng giao dịch
+// ... (TransactionRow giữ nguyên) ...
 @Composable
 fun TransactionRow(transaction: Transaction, accountName: String) {
     // TÌM CATEGORY ĐỂ LẤY ICON VÀ MÀU
@@ -316,6 +329,34 @@ fun TransactionRow(transaction: Transaction, accountName: String) {
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
             color = amountColor
+        )
+    }
+}
+
+
+// #### THÊM HÀM PREVIEW NÀY VÀO CUỐI TỆP ####
+@Preview(showBackground = true)
+@Composable
+fun CalendarScreenPreview() {
+    MoneyNoteTheme(darkTheme = true) {
+        // Tạo dữ liệu giả (mock data)
+        val mockAccounts = listOf(
+            Account(1, "Tiền mặt", 0.0, "wallet", "#FFFFFF"),
+            Account(2, "Ngân hàng", 0.0, "account_balance", "#FFFFFF")
+        )
+        val mockTransactions = listOf(
+            Transaction(1, "expense", Date(), 50000.0, "Ăn uống", "Cơm trưa", 1L),
+            Transaction(2, "income", Date(), 2000000.0, "Tiền lương", null, 2L),
+            Transaction(3, "expense", Date(), 150000.0, "Đi lại", "Grab", 1L)
+        )
+
+        CalendarScreenContent(
+            selectedDate = Date(),
+            transactions = mockTransactions,
+            accounts = mockAccounts,
+            selectedAccountId = 0L,
+            onAccountSelected = {},
+            onChangeMonth = {}
         )
     }
 }

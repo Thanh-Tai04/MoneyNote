@@ -58,14 +58,34 @@ import com.example.moneynote.ui.theme.CardNight
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+// THÊM CÁC IMPORT CHO PREVIEW
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.moneynote.ui.theme.MoneyNoteTheme
 
-// #### MÀN HÌNH 1: NHẬP VÀO ####
-@OptIn(ExperimentalMaterial3Api::class)
+// #### MÀN HÌNH 1: HÀM "SMART" (CÓ VIEWMODEL) ####
+// (Đây là hàm mà NavigationGraph gọi)
 @Composable
 fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
     // Lấy danh sách tài khoản từ ViewModel
     val accounts by viewModel.allAccounts.collectAsState()
 
+    // Gọi hàm "Dumb" (chỉ chứa UI)
+    AddTransactionScreenContent(
+        accounts = accounts,
+        onAddTransaction = { type, date, amount, category, note, accountId ->
+            viewModel.addTransaction(type, date, amount, category, note, accountId)
+        }
+    )
+}
+
+// #### MÀN HÌNH 1: HÀM "DUMB" (CHỈ CÓ UI) ####
+// (Hàm này chứa toàn bộ giao diện, không biết gì về ViewModel)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddTransactionScreenContent(
+    accounts: List<Account>, // <-- Nhận dữ liệu
+    onAddTransaction: (String, Date, Double, String, String?, Long) -> Unit // <-- Gửi sự kiện
+) {
     // Trạng thái (State) cho toàn màn hình
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Chi tiêu, 1: Thu nhập
     val tabs = listOf("Chi tiêu", "Thu nhập")
@@ -79,15 +99,12 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
     var showDatePicker by remember { mutableStateOf(false) }
 
     // #### BẮT ĐẦU SỬA LỖI - MẶC ĐỊNH CHỌN TÀI KHOẢN ####
-    // Được chạy mỗi khi danh sách `accounts` thay đổi
     LaunchedEffect(accounts) {
         if (selectedAccount == null && accounts.isNotEmpty()) {
-            // Mặc định chọn tài khoản đầu tiên ("Tiền mặt")
             selectedAccount = accounts.first()
         }
     }
-    // #### KẾT THÚC SỬA LỖI - MẶC ĐỊNH CHỌN TÀI KHOẢN ####
-
+    // #### KẾT THÚC SỬA LỖI ####
 
     // Hàm reset form
     fun resetForm() {
@@ -95,7 +112,7 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
         note = ""
         selectedCategory = null
         selectedDate = Date()
-        // GIỮ LẠI selectedAccount (để nó luôn là "Tiền mặt")
+        // Giữ lại selectedAccount
     }
 
     Column(
@@ -128,7 +145,7 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // 3. Form nhập liệu chung
-        // Chọn ngày
+        // ... (OutlinedTextField cho Ngày) ...
         OutlinedTextField(
             value = SimpleDateFormat("dd/MM/yyyy (E)", Locale.getDefault()).format(selectedDate),
             onValueChange = {},
@@ -146,21 +163,20 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Chọn tài khoản (Dropdown)
+        // ... (ExposedDropdownMenuBox cho Tài khoản) ...
         var accountDropdownExpanded by remember { mutableStateOf(false) }
         ExposedDropdownMenuBox(
             expanded = accountDropdownExpanded,
             onExpandedChange = { accountDropdownExpanded = !accountDropdownExpanded }
         ) {
             OutlinedTextField(
-                // Hiển thị tên tài khoản đã chọn (hoặc "Chọn tài khoản" nếu null)
                 value = selectedAccount?.name ?: "Chọn tài khoản",
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Tài khoản") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountDropdownExpanded) },
                 modifier = Modifier
-                    .menuAnchor() // Quan trọng
+                    .menuAnchor()
                     .fillMaxWidth()
             )
             ExposedDropdownMenu(
@@ -181,7 +197,7 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Ghi chú
+        // ... (OutlinedTextField cho Ghi chú) ...
         OutlinedTextField(
             value = note,
             onValueChange = { note = it },
@@ -191,7 +207,7 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Số tiền
+        // ... (OutlinedTextField cho Số tiền) ...
         OutlinedTextField(
             value = amount,
             onValueChange = { amount = it },
@@ -213,7 +229,7 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
         val currentCategories = if (selectedTab == 0) expenseCategories else incomeCategories
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 90.dp),
-            modifier = Modifier.weight(1f), // Chiếm phần còn lại
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -232,20 +248,17 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
         Button(
             onClick = {
                 val amountDouble = amount.toDoubleOrNull()
-                // Kiểm tra dữ liệu: đảm bảo 4 trường quan trọng được điền
                 if (amountDouble != null && amountDouble > 0 && selectedCategory != null && selectedAccount != null) {
-                    viewModel.addTransaction(
-                        type = if (selectedTab == 0) "expense" else "income",
-                        date = selectedDate,
-                        amount = amountDouble,
-                        category = selectedCategory!!.name,
-                        note = note.takeIf { it.isNotBlank() },
-                        accountId = selectedAccount!!.id
+                    // Gọi sự kiện
+                    onAddTransaction(
+                        if (selectedTab == 0) "expense" else "income",
+                        selectedDate,
+                        amountDouble,
+                        selectedCategory!!.name,
+                        note.takeIf { it.isNotBlank() },
+                        selectedAccount!!.id
                     )
-                    // Reset form sau khi nhập
                     resetForm()
-                } else {
-                    // (Tùy chọn) Hiển thị thông báo lỗi cho người dùng
                 }
             },
             modifier = Modifier
@@ -259,11 +272,11 @@ fun AddTransactionScreen(viewModel: AddTransactionViewModel) {
         }
     }
 
-    // Hiển thị DatePickerDialog khi showDatePicker == true
+    // ... (DatePickerDialog) ...
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate.time,
-            initialDisplayMode = DisplayMode.Picker // Hiển thị kiểu Lịch
+            initialDisplayMode = DisplayMode.Picker
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -300,23 +313,21 @@ fun CategoryItem(
         onClick = onClick,
         modifier = Modifier.size(90.dp),
         colors = CardDefaults.cardColors(
-            // SỬA: Dùng màu CardNight cho màu nền mặc định
             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceVariant
         ),
-        // Thêm đổ bóng
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
+            // SỬA LỖI: Đổi 'verticalAlignment' thành 'verticalArrangement'
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = category.icon,
                 contentDescription = category.name,
                 modifier = Modifier.size(32.dp),
-                // LẤY MÀU TỪ CATEGORY
                 tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else category.color
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -324,9 +335,29 @@ fun CategoryItem(
                 text = category.name,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
-                // Màu chữ (trắng mờ hoặc trắng)
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
             )
         }
+    }
+}
+
+
+// #### THÊM HÀM PREVIEW NÀY VÀO CUỐI TỆP ####
+@Preview(showBackground = true)
+@Composable
+fun AddTransactionScreenPreview() {
+    // Áp dụng chủ đề Dark Theme (đã định nghĩa trong ui/theme/Theme.kt)
+    MoneyNoteTheme(darkTheme = true) {
+        // Tạo dữ liệu giả (mock data)
+        val mockAccounts = listOf(
+            Account(1, "Tiền mặt", 0.0, "wallet", "#FFFFFF"),
+            Account(2, "Ngân hàng", 0.0, "account_balance", "#FFFFFF")
+        )
+
+        // Gọi hàm "Dumb" (chỉ chứa UI)
+        AddTransactionScreenContent(
+            accounts = mockAccounts,
+            onAddTransaction = { _, _, _, _, _, _ -> } // (Không làm gì cả)
+        )
     }
 }

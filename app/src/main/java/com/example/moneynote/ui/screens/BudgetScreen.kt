@@ -44,28 +44,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+// THÊM CÁC IMPORT CHO PREVIEW, STATE, VÀ COMPONENTS
 import com.example.moneynote.ui.BudgetItem
+import com.example.moneynote.ui.BudgetUiState
 import com.example.moneynote.ui.BudgetViewModel
+import com.example.moneynote.ui.Category
 import com.example.moneynote.ui.components.MonthYearPicker
 import com.example.moneynote.ui.components.SummaryRow
+import com.example.moneynote.ui.expenseCategories
 import com.example.moneynote.ui.formatCurrency
-import com.example.moneynote.ui.expenseCategories
-import com.example.moneynote.ui.Category
-// THÊM IMPORT MỚI
-import com.example.moneynote.ui.expenseCategories
 import com.example.moneynote.ui.theme.NegativeRed
 import com.example.moneynote.ui.theme.PositiveGreen
 import com.example.moneynote.ui.theme.WarningOrange
+import java.util.Date
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.moneynote.ui.theme.MoneyNoteTheme
 
-
-// #### MÀN HÌNH 4: NGÂN SÁCH ####
-
+// #### MÀN HÌNH 4: HÀM "SMART" (CÓ VIEWMODEL) ####
 @Composable
 fun BudgetScreen(viewModel: BudgetViewModel) {
     // Thu thập State từ ViewModel
     val selectedDate by viewModel.selectedDate.collectAsState()
     val budgetState by viewModel.budgetState.collectAsState()
 
+    BudgetScreenContent(
+        selectedDate = selectedDate,
+        budgetState = budgetState,
+        onChangeMonth = { viewModel.changeMonth(it) },
+        onSetBudget = { category, amount -> viewModel.setBudget(category, amount) }
+    )
+}
+
+// #### MÀN HÌNH 4: HÀM "DUMB" (CHỈ CÓ UI) ####
+@Composable
+fun BudgetScreenContent(
+    selectedDate: Date,
+    budgetState: BudgetUiState,
+    onChangeMonth: (Int) -> Unit,
+    onSetBudget: (String, Double) -> Unit
+) {
     // Trạng thái cho Dialog
     var showDialog by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf("Ăn uống") } // Mặc định
@@ -93,7 +110,7 @@ fun BudgetScreen(viewModel: BudgetViewModel) {
         ) {
             MonthYearPicker(
                 date = selectedDate,
-                onChangeMonth = { viewModel.changeMonth(it) }
+                onChangeMonth = onChangeMonth
             )
 
             TextButton(onClick = {
@@ -112,13 +129,14 @@ fun BudgetScreen(viewModel: BudgetViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
+            elevation = CardDefaults.cardElevation(4.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 SummaryRow(label = "Tổng ngân sách", amount = budgetState.totalBudget, color = MaterialTheme.colorScheme.onSurface)
-                SummaryRow(label = "Đã chi tiêu", amount = budgetState.totalSpent, color = Color(0xFFF44336))
+                SummaryRow(label = "Đã chi tiêu", amount = budgetState.totalSpent, color = NegativeRed)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                SummaryRow(label = "Còn lại", amount = budgetState.totalBudget - budgetState.totalSpent, color = Color(0xFF4CAF50), isBold = true)
+                SummaryRow(label = "Còn lại", amount = budgetState.totalBudget - budgetState.totalSpent, color = PositiveGreen, isBold = true)
             }
         }
 
@@ -157,7 +175,7 @@ fun BudgetScreen(viewModel: BudgetViewModel) {
             onConfirm = {
                 val amountDouble = budgetAmount.toDoubleOrNull()
                 if (amountDouble != null && amountDouble > 0) {
-                    viewModel.setBudget(selectedCategory, amountDouble)
+                    onSetBudget(selectedCategory, amountDouble) // Gọi sự kiện
                     showDialog = false
                 }
             }
@@ -183,8 +201,8 @@ fun BudgetRow(item: BudgetItem, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .clickable { onClick() },
-        // Thêm đổ bóng
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -231,7 +249,7 @@ fun BudgetRow(item: BudgetItem, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = formatCurrency(item.spentAmount), // (Đã sửa từ item.amount)
+                    text = formatCurrency(item.spentAmount),
                     style = MaterialTheme.typography.bodyMedium,
                     color = progressColor
                 )
@@ -244,6 +262,7 @@ fun BudgetRow(item: BudgetItem, onClick: () -> Unit) {
         }
     }
 }
+
 // Dialog để đặt ngân sách
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -325,4 +344,30 @@ fun SetBudgetDialog(
             }
         }
     )
+}
+
+
+// #### THÊM HÀM PREVIEW NÀY VÀO CUỐI TỆP ####
+@Preview(showBackground = true)
+@Composable
+fun BudgetScreenPreview() {
+    MoneyNoteTheme(darkTheme = true) {
+        // Tạo dữ liệu giả (mock data)
+        val mockBudgetState = BudgetUiState(
+            totalBudget = 5000000.0,
+            totalSpent = 1350000.0,
+            budgetItems = listOf(
+                BudgetItem("Ăn uống", 2000000.0, 1500000.0, 0.75f),
+                BudgetItem("Đi lại", 1000000.0, 500000.0, 0.5f),
+                BudgetItem("Mua sắm", 2000000.0, 2500000.0, 1.25f)
+            )
+        )
+
+        BudgetScreenContent(
+            selectedDate = Date(),
+            budgetState = mockBudgetState,
+            onChangeMonth = {},
+            onSetBudget = { _, _ -> }
+        )
+    }
 }

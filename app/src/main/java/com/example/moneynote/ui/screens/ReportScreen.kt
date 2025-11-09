@@ -1,6 +1,5 @@
 package com.example.moneynote.ui.screens
 
-// #### BẮT ĐẦU SỬA LỖI - DỌN DẸP IMPORT ####
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +20,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -34,25 +32,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.moneynote.ui.ChartData // <-- Từ ViewModel
+// THÊM CÁC IMPORT CHO PREVIEW, STATE, VÀ COMPONENTS
+import com.example.moneynote.data.Account
+import com.example.moneynote.ui.ChartData
+import com.example.moneynote.ui.ReportUiState
 import com.example.moneynote.ui.ReportViewModel
 import com.example.moneynote.ui.components.AccountFilter
 import com.example.moneynote.ui.components.MonthYearPicker
 import com.example.moneynote.ui.components.SummaryRow
-import com.example.moneynote.ui.expenseCategories // <-- Từ CategoryData
-import com.example.moneynote.ui.formatCurrency // <-- Từ DateUtils
-import com.example.moneynote.ui.incomeCategories // <-- Từ CategoryData
+import com.example.moneynote.ui.expenseCategories
+import com.example.moneynote.ui.formatCurrency
+import com.example.moneynote.ui.incomeCategories
 import com.example.moneynote.ui.theme.NegativeRed
 import com.example.moneynote.ui.theme.PositiveGreen
-// #### KẾT THÚC SỬA LỖI ####
+import java.util.Date
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.moneynote.ui.theme.MoneyNoteTheme
 
-// #### MÀN HÌNH 3: BÁO CÁO ####
-
+// #### MÀN HÌNH 3: HÀM "SMART" (CÓ VIEWMODEL) ####
 @Composable
 fun ReportScreen(viewModel: ReportViewModel) {
     // Thu thập State từ ViewModel
@@ -61,6 +60,26 @@ fun ReportScreen(viewModel: ReportViewModel) {
     val reportState by viewModel.reportState.collectAsState()
     val selectedAccountId by viewModel.selectedAccountId.collectAsState()
 
+    ReportScreenContent(
+        selectedDate = selectedDate,
+        accounts = accounts,
+        reportState = reportState,
+        selectedAccountId = selectedAccountId,
+        onChangeMonth = { viewModel.changeMonth(it) },
+        onAccountSelected = { viewModel.selectAccount(it) }
+    )
+}
+
+// #### MÀN HÌNH 3: HÀM "DUMB" (CHỈ CÓ UI) ####
+@Composable
+fun ReportScreenContent(
+    selectedDate: Date,
+    accounts: List<Account>,
+    reportState: ReportUiState,
+    selectedAccountId: Long,
+    onChangeMonth: (Int) -> Unit,
+    onAccountSelected: (Long) -> Unit
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Chi tiêu", "Thu nhập")
 
@@ -68,7 +87,7 @@ fun ReportScreen(viewModel: ReportViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-        // LỖI "verticalAlignment" ĐÃ ĐƯỢC XÓA
+        // LỖI 'verticalAlignment' ĐÃ ĐƯỢC XÓA
     ) {
         // 1. Tiêu đề
         Text(
@@ -86,12 +105,12 @@ fun ReportScreen(viewModel: ReportViewModel) {
         ) {
             MonthYearPicker(
                 date = selectedDate,
-                onChangeMonth = { viewModel.changeMonth(it) }
+                onChangeMonth = onChangeMonth
             )
             AccountFilter(
                 accounts = accounts,
                 selectedAccountId = selectedAccountId,
-                onAccountSelected = { viewModel.selectAccount(it) }
+                onAccountSelected = onAccountSelected
             )
         }
 
@@ -101,23 +120,18 @@ fun ReportScreen(viewModel: ReportViewModel) {
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
             elevation = CardDefaults.cardElevation(4.dp),
-            // Dùng màu nền Surface (CardNight) từ Theme
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Dùng màu PositiveGreen và NegativeRed
                 SummaryRow(label = "Thu nhập", amount = reportState.totalIncome, color = PositiveGreen)
                 SummaryRow(label = "Chi tiêu", amount = reportState.totalExpense, color = NegativeRed)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 SummaryRow(label = "Thu chi", amount = reportState.totalIncome - reportState.totalExpense, color = MaterialTheme.colorScheme.onSurface, isBold = true)
             }
         }
 
         // 4. Tabs (Chi tiêu / Thu nhập)
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = MaterialTheme.colorScheme.surface // Màu nền Tab
-        ) {
+        TabRow(selectedTabIndex = selectedTab) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
@@ -132,7 +146,7 @@ fun ReportScreen(viewModel: ReportViewModel) {
         // 5. Nội dung Tab
         Box(modifier = Modifier.weight(1f)) {
             val data = if (selectedTab == 0) reportState.expenseChartData else reportState.incomeChartData
-            val type = if (selectedTab == 0) "expense" else "income" // <-- Lấy type
+            val type = if (selectedTab == 0) "expense" else "income"
 
             if (data.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -145,14 +159,8 @@ fun ReportScreen(viewModel: ReportViewModel) {
 
                     // Danh sách chi tiết
                     items(data) { chartData ->
-                        // #### BẮT ĐẦU SỬA LỖI ####
-                        // Sửa 'item' thành 'data'
-                        // Thêm tham số 'type'
-                        ReportCategoryRow(
-                            data = chartData,
-                            type = type
-                        )
-                        // #### KẾT THÚC SỬA LỖI ####
+                        // SỬA LỖI: Gọi hàm với tham số chính xác
+                        ReportCategoryRow(data = chartData, type = type)
                     }
                 }
             }
@@ -160,20 +168,17 @@ fun ReportScreen(viewModel: ReportViewModel) {
     }
 }
 
-// Hàng báo cáo (ĐÃ ĐỔI TÊN TỪ ReportRow thành ReportCategoryRow)
-@Composable
-fun ReportCategoryRow(
-    data: ChartData, // <-- Kiểu dữ liệu đúng
-    type: String // "expense" hoặc "income"
-) {
-    // Tìm danh mục tương ứng để lấy icon và màu
-    val categories = if (type == "expense") expenseCategories else incomeCategories
-    val category = categories.find { it.name == data.category }
-        ?: categories.find { it.name == "Khác" } // Mặc định là "Khác"
 
+// #### HÀM COMPOSABLE PHỤ (ĐÃ DI CHUYỂN VÀO ĐÂY) ####
+@Composable
+fun ReportCategoryRow(data: ChartData, type: String) {
+    // TÌM CATEGORY ĐỂ LẤY ICON VÀ MÀU
+    val categoryList = if (type == "expense") expenseCategories else incomeCategories
+    val category = categoryList.find { it.name == data.category }
     val icon = category?.icon ?: Icons.Default.QuestionMark
-    // Lấy màu từ danh mục (đã định nghĩa trong CategoryData.kt)
     val tint = category?.color ?: MaterialTheme.colorScheme.onSurfaceVariant
+
+    val amountColor = if (type == "expense") NegativeRed else PositiveGreen
 
     Row(
         modifier = Modifier
@@ -181,56 +186,66 @@ fun ReportCategoryRow(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon
         Icon(
             imageVector = icon,
             contentDescription = data.category,
-            modifier = Modifier.size(32.dp),
-            tint = tint // <-- Áp dụng màu
+            modifier = Modifier.size(40.dp),
+            tint = tint // <-- ÁP DỤNG MÀU ICON
         )
         Spacer(modifier = Modifier.width(16.dp))
-
-        // Tên và Thanh tiến độ
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = data.category,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "${"%.1f".format(data.percentage * 100)}%",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            LinearProgressIndicator(
-                progress = { data.percentage }, // Sửa: Dùng lambda
-                modifier = Modifier.fillMaxWidth(),
-                color = tint, // <-- Dùng màu của danh mục
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            Text(
+                text = data.category,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
             )
         }
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // Tổng tiền
-        Text(
-            text = formatCurrency(data.amount),
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            color = if (type == "expense") NegativeRed else PositiveGreen,
-            textAlign = TextAlign.End,
-            modifier = Modifier.width(100.dp) // Đảm bảo căn lề đẹp
-        )
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = formatCurrency(data.amount),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = amountColor
+            )
+            Text(
+                text = "${"%.1f".format(data.percentage * 100)}%",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
-// #### BẮT ĐẦU SỬA LỖI ####
-// XÓA BỎ HOÀN TOÀN HÀM ReportRow CŨ (dùng CategoryReportData)
-// @Composable
-// fun ReportRow(item: CategoryReportData, type: String) { ... }
-// #### KẾT THÚC SỬA LỖI ####
+
+// #### THÊM HÀM PREVIEW NÀY VÀO CUỐI TỆP ####
+@Preview(showBackground = true)
+@Composable
+fun ReportScreenPreview() {
+    MoneyNoteTheme(darkTheme = true) {
+        // Tạo dữ liệu giả (mock data)
+        val mockAccounts = listOf(
+            Account(1, "Tiền mặt", 0.0, "wallet", "#FFFFFF"),
+            Account(2, "Ngân hàng", 0.0, "account_balance", "#FFFFFF")
+        )
+        val mockReportState = ReportUiState(
+            totalIncome = 5000000.0,
+            totalExpense = 1250000.0,
+            expenseChartData = listOf(
+                ChartData("Ăn uống", 800000.0, 0.64f),
+                ChartData("Đi lại", 450000.0, 0.36f)
+            ),
+            incomeChartData = listOf(
+                ChartData("Tiền lương", 5000000.0, 1.0f)
+            )
+        )
+
+        ReportScreenContent(
+            selectedDate = Date(),
+            accounts = mockAccounts,
+            reportState = mockReportState,
+            selectedAccountId = 0L,
+            onChangeMonth = {},
+            onAccountSelected = {}
+        )
+    }
+}
