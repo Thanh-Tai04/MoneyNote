@@ -1,17 +1,23 @@
 package com.example.moneynote.ui
 
-// XÓA CÁC IMPORT CŨ
-// import java.text.NumberFormat
-// import java.util.Locale
-// THÊM IMPORT MỚI
 import java.text.DecimalFormat
-// ---
+import java.text.DecimalFormatSymbols
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
+// THÊM CÁC IMPORT NÀY CHO VISUAL TRANSFORMATION
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 
 /**
- * Tệp tiện ích (utils) để xử lý logic ngày tháng
+ * Tệp này chứa các hàm tiện ích
+ * (Chúng ta sẽ để hàm formatCurrency ở đây)
  */
+
+// Hàm tiện ích để thay đổi tháng
 object DateUtils {
 
     /**
@@ -53,25 +59,63 @@ object DateUtils {
     }
 }
 
-// #### BẮT ĐẦU SỬA LỖI ĐỊNH DẠNG TIỀN TỆ ####
-/**
- * Định dạng số (Double) thành chuỗi tiền tệ
- * (Ví dụ: 5000000.0 -> "5.000.000đ")
- */
+// HÀM ĐỊNH DẠNG TIỀN TỆ (SỬ DỤNG DẤU CHẤM .)
 fun formatCurrency(amount: Double): String {
-    // Tạo một định dạng số
-    // #,##0 đảm bảo sử dụng dấu phân cách (ví dụ: 5.000.000)
-    // 'đ' là ký tự đơn vị tiền tệ ở cuối
-    val formatter = DecimalFormat("#,##0'đ'")
-
-    // Lấy các ký hiệu định dạng (dấu phẩy, dấu chấm)
-    val symbols = formatter.decimalFormatSymbols.apply {
-        // Đặt ký tự phân cách hàng nghìn là dấu CHẤM (.)
-        groupingSeparator = '.'
-    }
-    formatter.decimalFormatSymbols = symbols
-
-    // Trả về chuỗi đã định dạng
+    val symbols = DecimalFormatSymbols(Locale("vi", "VN"))
+    symbols.groupingSeparator = '.' // Đặt dấu phân cách hàng nghìn là dấu chấm
+    val formatter = DecimalFormat("#,###đ", symbols)
     return formatter.format(amount)
+}
+
+// #### BẮT ĐẦU SỬA LỖI - THÊM LỚP MỚI ####
+
+/**
+ * Lớp này tự động thêm dấu chấm (.) phân cách hàng nghìn
+ * khi người dùng nhập số tiền vào OutlinedTextField.
+ */
+class CurrencyVisualTransformation : VisualTransformation {
+
+    // Định dạng số của Việt Nam (dùng dấu chấm)
+    private val symbols = DecimalFormatSymbols(Locale("vi", "VN"))
+    private val formatter = DecimalFormat("#,###", symbols)
+
+    override fun filter(text: AnnotatedString): TransformedText {
+        // Lấy chuỗi số (ví dụ: "5000000")
+        val originalText = text.text.trim()
+        if (originalText.isEmpty()) {
+            return TransformedText(text, OffsetMapping.Identity)
+        }
+
+        // Chuyển "5000000" thành 5000000 (kiểu Long)
+        val number = try {
+            originalText.toLong()
+        } catch (e: NumberFormatException) {
+            // Xảy ra nếu số quá lớn
+            return TransformedText(text, OffsetMapping.Identity)
+        }
+
+        // Định dạng số đó thành "5.000.000"
+        val formattedText = formatter.format(number)
+
+        // Tạo OffsetMapping để giữ vị trí con trỏ (cursor) đúng
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                // Tính xem có bao nhiêu dấu chấm đã được thêm vào
+                val commas = formattedText.count { it == '.' }
+                return offset + commas
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                // Tính xem có bao nhiêu dấu chấm trước con trỏ
+                val commasBefore = formattedText.substring(0, offset).count { it == '.' }
+                return offset - commasBefore
+            }
+        }
+
+        return TransformedText(
+            AnnotatedString(formattedText),
+            offsetMapping
+        )
+    }
 }
 // #### KẾT THÚC SỬA LỖI ####
