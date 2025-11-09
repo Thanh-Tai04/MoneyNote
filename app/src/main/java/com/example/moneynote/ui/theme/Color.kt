@@ -1,0 +1,31 @@
+package com.example.moneynote.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// Bảng màu MỚI theo chủ đề Đêm (Night/Blue)
+
+// Màu nền chính (tối nhất)
+val NightBlue = Color(0xFF0D1117)
+// Màu cho Card, thanh BottomNav (sáng hơn nền một chút)
+val CardNight = Color(0xFF161B22)
+// Màu chính (cho nút, tiêu đề, tab được chọn)
+val OceanBlue = Color(0xFF2F81F7)
+// Màu nhấn (cho các chi tiết nhỏ, icon)
+val AquaGreen = Color(0xFF238636)
+// Màu chữ
+val SoftWhite = Color(0xFFE6EDF3)
+// Màu chữ phụ (ghi chú, ngày tháng)
+val MutedGray = Color(0xFF8B949E)
+
+// Màu ngữ nghĩa (Semantic)
+val PositiveGreen = Color(0xFF3FB950)
+val NegativeRed = Color(0xFFF85149)
+val WarningOrange = Color(0xFFFFA726)
+
+// (Màu cũ - không dùng nữa)
+// val Purple80 = Color(0xFFD0BCFF)
+// val PurpleGrey80 = Color(0xFFCCC2DC)
+// val Pink80 = Color(0xFFEFB8C8)
+// val Purple40 = Color(0xFF6650a4)
+// val PurpleGrey40 = Color(0xFF625b71)
+// val Pink40 = Color(0xFF7D5260)
