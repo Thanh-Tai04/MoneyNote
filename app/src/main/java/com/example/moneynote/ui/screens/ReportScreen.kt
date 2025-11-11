@@ -34,12 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-// THÊM CÁC IMPORT CHO PREVIEW, STATE, VÀ COMPONENTS
+import androidx.compose.ui.graphics.Color
 import com.example.moneynote.data.Account
 import com.example.moneynote.ui.ChartData
 import com.example.moneynote.ui.ReportUiState
 import com.example.moneynote.ui.ReportViewModel
 import com.example.moneynote.ui.components.AccountFilter
+import com.example.moneynote.ui.components.DonutChart
 import com.example.moneynote.ui.components.MonthYearPicker
 import com.example.moneynote.ui.components.SummaryRow
 import com.example.moneynote.ui.expenseCategories
@@ -54,7 +55,6 @@ import com.example.moneynote.ui.theme.MoneyNoteTheme
 // #### MÀN HÌNH 3: HÀM "SMART" (CÓ VIEWMODEL) ####
 @Composable
 fun ReportScreen(viewModel: ReportViewModel) {
-    // Thu thập State từ ViewModel
     val selectedDate by viewModel.selectedDate.collectAsState()
     val accounts by viewModel.allAccounts.collectAsState()
     val reportState by viewModel.reportState.collectAsState()
@@ -87,7 +87,6 @@ fun ReportScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-        // LỖI 'verticalAlignment' ĐÃ ĐƯỢC XÓA
     ) {
         // 1. Tiêu đề
         Text(
@@ -154,12 +153,20 @@ fun ReportScreenContent(
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    // (Tùy chọn) Thêm Biểu đồ tròn ở đây
-                    // ...
+                    // ★ THÊM BIỂU ĐỒ TRÒN Ở ĐÂY ★
+                    item {
+                        DonutChart(
+                            data = data,
+                            type = type,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
 
                     // Danh sách chi tiết
                     items(data) { chartData ->
-                        // SỬA LỖI: Gọi hàm với tham số chính xác
                         ReportCategoryRow(data = chartData, type = type)
                     }
                 }
@@ -169,10 +176,9 @@ fun ReportScreenContent(
 }
 
 
-// #### HÀM COMPOSABLE PHỤ (ĐÃ DI CHUYỂN VÀO ĐÂY) ####
+// #### HÀM COMPOSABLE PHỤ ####
 @Composable
 fun ReportCategoryRow(data: ChartData, type: String) {
-    // TÌM CATEGORY ĐỂ LẤY ICON VÀ MÀU
     val categoryList = if (type == "expense") expenseCategories else incomeCategories
     val category = categoryList.find { it.name == data.category }
     val icon = category?.icon ?: Icons.Default.QuestionMark
@@ -190,7 +196,7 @@ fun ReportCategoryRow(data: ChartData, type: String) {
             imageVector = icon,
             contentDescription = data.category,
             modifier = Modifier.size(40.dp),
-            tint = tint // <-- ÁP DỤNG MÀU ICON
+            tint = tint
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -217,25 +223,28 @@ fun ReportCategoryRow(data: ChartData, type: String) {
 }
 
 
-// #### THÊM HÀM PREVIEW NÀY VÀO CUỐI TỆP ####
+// #### PREVIEW ####
 @Preview(showBackground = true)
 @Composable
 fun ReportScreenPreview() {
     MoneyNoteTheme(darkTheme = true) {
-        // Tạo dữ liệu giả (mock data)
         val mockAccounts = listOf(
             Account(1, "Tiền mặt", 0.0, "wallet", "#FFFFFF"),
             Account(2, "Ngân hàng", 0.0, "account_balance", "#FFFFFF")
         )
+
         val mockReportState = ReportUiState(
             totalIncome = 5000000.0,
-            totalExpense = 1250000.0,
+            totalExpense = 1790000.0,
             expenseChartData = listOf(
-                ChartData("Ăn uống", 800000.0, 0.64f),
-                ChartData("Đi lại", 450000.0, 0.36f)
+                ChartData("Ăn uống", 800000.0, 0.447f, Color(0xFF00B894)),
+                ChartData("Đi lại", 120000.0, 0.067f, Color(0xFF0984E3)),
+                ChartData("Chi tiêu hàng ngày", 400000.0, 0.225f, Color(0xFFFFC312)),
+                ChartData("Y tế", 90000.0, 0.051f, Color(0xFFE17055)),
+                ChartData("Khác", 380000.0, 0.210f, Color(0xFF6C5CE7))
             ),
             incomeChartData = listOf(
-                ChartData("Tiền lương", 5000000.0, 1.0f)
+                ChartData("Tiền lương", 5000000.0, 1.0f, Color(0xFF00B894))
             )
         )
 
