@@ -91,8 +91,6 @@ class BudgetViewModel(private val repository: MoneyNoteRepository) : ViewModel()
             )
         }
 
-        // (Tùy chọn) Thêm các mục đã chi nhưng chưa đặt ngân sách
-        // ... (bạn có thể mở rộng sau)
 
         return BudgetUiState(
             totalBudget = totalBudget,

@@ -27,7 +27,7 @@ fun DonutChart(
     data: List<ChartData>,
     type: String,
     modifier: Modifier = Modifier,
-    gapDegrees: Float = 2f // Khoảng cách giữa các danh mục
+    gapDegrees: Float = 2f
 ) {
     if (data.isEmpty()) return
 
@@ -67,7 +67,7 @@ fun DonutChart(
                     style = Stroke(width = strokeWidth, cap = StrokeCap.Butt) // góc nhọn bo nhẹ
                 )
 
-                // Chỉ vẽ nhãn nếu >5%
+                // Chỉ vẽ nhãn nếu =>5%
                 if (chartData.percentage > 0.049f) {
                     val angleRad = Math.toRadians(middleAngle.toDouble())
                     val startX = centerX + (outerRadius * cos(angleRad)).toFloat()
@@ -146,7 +146,7 @@ fun DonutChartPreview() {
         DonutChart(
             data = mockData,
             type = "expense",
-            gapDegrees = 4f // Tăng khoảng cách giữa các danh mục
+            gapDegrees = 4f
         )
     }
 }

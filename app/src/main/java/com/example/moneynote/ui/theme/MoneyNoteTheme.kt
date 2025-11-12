@@ -2,7 +2,6 @@ package com.example.moneynote.ui.theme
 
 import android.app.Activity
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -14,22 +13,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-// THÊM CÁC DÒNG IMPORT NÀY:
-import androidx.compose.ui.graphics.Color // <-- Import cho 'Color(0xFFFFFFFF)'
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-// Import các màu tùy chỉnh từ Color.kt
-import com.example.moneynote.ui.theme.AquaGreen
-import com.example.moneynote.ui.theme.CardNight
-import com.example.moneynote.ui.theme.MutedGray
-import com.example.moneynote.ui.theme.NegativeRed
-import com.example.moneynote.ui.theme.NightBlue
-import com.example.moneynote.ui.theme.OceanBlue
-import com.example.moneynote.ui.theme.PositiveGreen // (Cần cho LightColorScheme nếu bạn dùng)
-import com.example.moneynote.ui.theme.SoftWhite
-
-// Cập nhật DarkColorScheme để sử dụng Bảng màu mới
+import androidx.compose.ui.graphics.Color
 private val DarkColorScheme = darkColorScheme(
     primary = OceanBlue,       // Màu chính (nút, tab, icon được chọn)
     secondary = AquaGreen,     // Màu nhấn
@@ -54,7 +38,6 @@ private val LightColorScheme = lightColorScheme(
     primary = OceanBlue,
     secondary = AquaGreen,
     background = Color(0xFFFFFFFF)
-    /* ... (Các màu khác cho LightTheme) ... */
 )
 
 @Composable

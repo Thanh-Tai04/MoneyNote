@@ -1,11 +1,9 @@
 package com.example.moneynote.ui.screens
 
-// #### BẮT ĐẦU SỬA LỖI ####
 // THÊM CÁC IMPORT CHO HIỆU ỨNG VÀ ICON MỚI
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-// #### KẾT THÚC SỬA LỖI ####
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,7 +69,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-// Data class (Giữ nguyên)
+// Data class
 data class DaySummary(
     val date: Date,
     val totalExpense: Double = 0.0,
@@ -386,7 +384,7 @@ fun SummaryItem(title: String, amount: Double, color: Color) {
     }
 }
 
-// Một hàng giao dịch (Giữ nguyên)
+// Một hàng giao dịch
 @Composable
 fun TransactionRow(transaction: Transaction, accountName: String) {
     val category = (expenseCategories + incomeCategories).find { it.name == transaction.category }
@@ -432,7 +430,6 @@ fun TransactionRow(transaction: Transaction, accountName: String) {
     }
 }
 
-// #### BẮT ĐẦU SỬA LỖI (LÀM GỌN LỊCH 1/2) ####
 @Composable
 fun CalendarDayCell(
     summary: DaySummary,
@@ -451,7 +448,6 @@ fun CalendarDayCell(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            // SỬA: Giảm chiều cao từ 65.dp xuống 50.dp
             .height(50.dp)
             .padding(1.dp), // Giữ nguyên
         shape = MaterialTheme.shapes.small,
@@ -498,10 +494,9 @@ fun CalendarDayCell(
         }
     }
 }
-// #### KẾT THÚC SỬA LỖI ####
 
 
-// #### HÀM PREVIEW (Giữ nguyên) ####
+// #### HÀM PREVIEW  ####
 @Preview(showBackground = true)
 @Composable
 fun CalendarScreenPreview() {

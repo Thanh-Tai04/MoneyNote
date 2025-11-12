@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.SharingStarted
 import java.util.Date
 import androidx.compose.ui.graphics.Color
-import com.example.moneynote.ui.expenseCategories
-import com.example.moneynote.ui.incomeCategories
 
 // Dữ liệu cho biểu đồ
 data class ChartData(

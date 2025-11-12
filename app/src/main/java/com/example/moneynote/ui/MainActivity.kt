@@ -16,12 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-// #### BẮT ĐẦU SỬA LỖI ####
-// THÊM CÁC IMPORT MỚI CHO SNACKBAR VÀ COROUTINE
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.rememberCoroutineScope
-// #### KẾT THÚC SỬA LỖI ####
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,18 +36,10 @@ import com.example.moneynote.MoneyNoteApplication
 import com.example.moneynote.ui.screens.AddTransactionScreen
 import com.example.moneynote.ui.screens.BudgetScreen
 import com.example.moneynote.ui.screens.CalendarScreen
-// #### BẮT ĐẦU SỬA LỖI ####
-// THÊM IMPORT CHO CÁC MÀN HÌNH MỚI
 import com.example.moneynote.ui.screens.CategoryManagementScreen
 import com.example.moneynote.ui.screens.CreateCategoryScreen
-// #### KẾT THÚC SỬA LỖI ####
 import com.example.moneynote.ui.screens.ReportScreen
 import com.example.moneynote.ui.theme.MoneyNoteTheme
-// THÊM IMPORT CHO CÁC VIEWMODEL FACTORY
-import com.example.moneynote.ui.AddTransactionViewModelFactory
-import com.example.moneynote.ui.CalendarViewModelFactory
-import com.example.moneynote.ui.ReportViewModelFactory
-import com.example.moneynote.ui.BudgetViewModelFactory
 
 
 class MainActivity : ComponentActivity() {

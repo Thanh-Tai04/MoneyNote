@@ -6,7 +6,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-// THÊM CÁC IMPORT NÀY CHO VISUAL TRANSFORMATION
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
@@ -58,7 +57,7 @@ object DateUtils {
     }
 }
 
-// #### BẮT ĐẦU THÊM MỚI (LOGIC LỊCH) ####
+// #### LOGIC LỊCH ####
 
 /**
  * Lấy danh sách 7 tên ngày trong tuần (T2, T3, ...)
@@ -136,7 +135,6 @@ fun isSameDay(date1: Date, date2: Date): Boolean {
     return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
             cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
 }
-// #### KẾT THÚC THÊM MỚI ####
 
 
 // HÀM ĐỊNH DẠNG TIỀN TỆ (SỬ DỤNG DẤU CHẤM .)

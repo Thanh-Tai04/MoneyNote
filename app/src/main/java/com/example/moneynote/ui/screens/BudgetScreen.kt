@@ -40,11 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-// THÊM CÁC IMPORT CHO PREVIEW, STATE, VÀ COMPONENTS
 import com.example.moneynote.ui.BudgetItem
 import com.example.moneynote.ui.BudgetUiState
 import com.example.moneynote.ui.BudgetViewModel
@@ -115,7 +113,7 @@ fun BudgetScreenContent(
 
             TextButton(onClick = {
                 // Mở dialog để TẠO MỚI
-                selectedCategory = "Ăn uống" // Reset
+                selectedCategory = "Ăn uống"
                 budgetAmount = ""
                 isEditing = false
                 showDialog = true
@@ -151,7 +149,6 @@ fun BudgetScreenContent(
                     BudgetRow(
                         item = budgetItem,
                         onClick = {
-                            // Mở dialog để CHỈNH SỬA
                             selectedCategory = budgetItem.category
                             budgetAmount = budgetItem.limitAmount.toLong().toString()
                             isEditing = true
@@ -282,7 +279,6 @@ fun SetBudgetDialog(
         title = { Text(if (isEditing) "Sửa Ngân sách" else "Đặt Ngân sách") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Chọn danh mục (chỉ khi tạo mới)
                 if (!isEditing) {
                     ExposedDropdownMenuBox(
                         expanded = categoryDropdownExpanded,
@@ -295,7 +291,7 @@ fun SetBudgetDialog(
                             label = { Text("Danh mục") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded) },
                             modifier = Modifier
-                                .menuAnchor() // Quan trọng
+                                .menuAnchor()
                                 .fillMaxWidth()
                         )
                         ExposedDropdownMenu(

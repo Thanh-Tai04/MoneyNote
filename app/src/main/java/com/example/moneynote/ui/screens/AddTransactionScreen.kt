@@ -8,7 +8,6 @@ import com.example.moneynote.ui.expenseCategories
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,9 +22,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-// #### BẮT ĐẦU SỬA LỖI (Thêm icon "Chỉnh sửa") ####
 import androidx.compose.material.icons.filled.MoreHoriz
-// #### KẾT THÚC SỬA LỖI ####
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,9 +36,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-// #### BẮT ĐẦU SỬA LỖI (Thêm Snackbar) ####
 import androidx.compose.material3.SnackbarHostState
-// #### KẾT THÚC SỬA LỖI ####
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -75,35 +70,29 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.moneynote.ui.theme.MoneyNoteTheme
 import com.example.moneynote.ui.CurrencyVisualTransformation
-// #### BẮT ĐẦU SỬA LỖI (Thêm NavController, Snackbar, Coroutine, MutedGray) ####
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.moneynote.ui.theme.MutedGray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-// #### KẾT THÚC SỬA LỖI ####
 
 
 // #### MÀN HÌNH 1: HÀM "SMART" (CÓ VIEWMODEL) ####
 @Composable
 fun AddTransactionScreen(
     viewModel: AddTransactionViewModel,
-    // #### BẮT ĐẦU SỬA LỖI (Thêm tham số mới) ####
     navController: NavHostController,
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope
-    // #### KẾT THÚC SỬA LỖI ####
 ) {
     // Lấy danh sách tài khoản từ ViewModel
     val accounts by viewModel.allAccounts.collectAsState()
 
     AddTransactionScreenContent(
         accounts = accounts,
-        // #### BẮT ĐẦU SỬA LỖI (Truyền các tham số mới) ####
         navController = navController,
         snackbarHostState = snackbarHostState,
         scope = scope,
-        // #### KẾT THÚC SỬA LỖI ####
         onAddTransaction = { type, date, amount, category, note, accountId ->
             viewModel.addTransaction(type, date, amount, category, note, accountId)
         }
@@ -115,14 +104,11 @@ fun AddTransactionScreen(
 @Composable
 fun AddTransactionScreenContent(
     accounts: List<Account>,
-    // #### BẮT ĐẦU SỬA LỖI (Thêm tham số mới) ####
     navController: NavHostController,
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
-    // #### KẾT THÚC SỬA LỖI ####
     onAddTransaction: (String, Date, Double, String, String?, Long) -> Unit
 ) {
-    // ... (Các State giữ nguyên) ...
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Chi tiêu", "Thu nhập")
     var amount by remember { mutableStateOf("") }
@@ -133,7 +119,6 @@ fun AddTransactionScreenContent(
     var showDatePicker by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // ... (LaunchedEffect và resetForm giữ nguyên) ...
     LaunchedEffect(accounts) {
         if (selectedAccount == null && accounts.isNotEmpty()) {
             selectedAccount = accounts.find { it.name == "Tiền mặt" } ?: accounts.first()
@@ -150,7 +135,6 @@ fun AddTransactionScreenContent(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // ... (Tiêu đề, Tabs, Form (Ngày, Tài khoản, Ghi chú, Số tiền) giữ nguyên) ...
         Text(
             text = "Sổ thu chi",
             style = MaterialTheme.typography.headlineLarge,
@@ -267,7 +251,6 @@ fun AddTransactionScreenContent(
                 )
             }
 
-            // #### BẮT ĐẦU SỬA LỖI (Thêm thẻ "Chỉnh sửa") ####
             item {
                 val editCategory = Category("Chỉnh sửa", Icons.Default.MoreHoriz, MutedGray)
                 CategoryItem(
@@ -279,7 +262,6 @@ fun AddTransactionScreenContent(
                     }
                 )
             }
-            // #### KẾT THÚC SỬA LỖI ####
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -299,19 +281,16 @@ fun AddTransactionScreenContent(
                         selectedAccount!!.id
                     )
 
-                    // #### BẮT ĐẦU SỬA LỖI (Hiển thị Snackbar) ####
                     scope.launch {
                         snackbarHostState.showSnackbar(
                             message = "Đã thêm giao dịch ${formatCurrency(amountDouble)}",
                             duration = androidx.compose.material3.SnackbarDuration.Short
                         )
                     }
-                    // #### KẾT THÚC SỬA LỖI ####
 
                     resetForm()
                     keyboardController?.hide()
                 } else {
-                    // (Tùy chọn) Hiển thị thông báo lỗi
                     scope.launch {
                         snackbarHostState.showSnackbar(
                             message = "Vui lòng điền đủ thông tin (Số tiền, Danh mục, Tài khoản)",
@@ -331,7 +310,6 @@ fun AddTransactionScreenContent(
         }
     }
 
-    // ... (DatePickerDialog giữ nguyên) ...
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate.time,
@@ -360,7 +338,6 @@ fun AddTransactionScreenContent(
     }
 }
 
-// ... (CategoryItem giữ nguyên) ...
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryItem(
@@ -400,7 +377,6 @@ fun CategoryItem(
 }
 
 
-// ... (Hàm Preview giữ nguyên) ...
 @Preview(showBackground = true)
 @Composable
 fun AddTransactionScreenPreview() {

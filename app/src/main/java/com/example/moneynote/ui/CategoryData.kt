@@ -4,20 +4,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.House
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.QuestionMark
-import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.moneynote.ui.theme.NegativeRed
 import com.example.moneynote.ui.theme.PositiveGreen
-import com.example.moneynote.ui.theme.WarningOrange
 
 
 // THÊM thuộc tính `color: Color` vào data class

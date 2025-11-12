@@ -30,7 +30,6 @@ class Converters {
 
     @TypeConverter
     fun dateToTimestamp(date: Date?): Long? {
-        // SỬA: Chuyển đổi Date sang Long (lỗi trong file của bạn)
         return date?.time
     }
 }
@@ -97,7 +96,6 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getTransactionsBetweenDates(startDate: Date, endDate: Date): Flow<List<Transaction>>
 
-    // SỬA: Tương tự, tham số là Date
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate AND account_id = :accountId ORDER BY date DESC")
     fun getTransactionsBetweenDates(startDate: Date, endDate: Date, accountId: Long): Flow<List<Transaction>>
 }
@@ -177,7 +175,6 @@ abstract class AppDatabase : RoomDatabase() {
                     "money_note_database"
                 )
                     .fallbackToDestructiveMigration()
-                    // SỬA: Truyền scope vào Callback
                     .addCallback(MoneyNoteDatabaseCallback(scope))
                     .build()
 
