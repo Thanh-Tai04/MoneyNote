@@ -19,12 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moneynote.ui.ChartData
 import com.example.moneynote.ui.formatCurrency
+import com.example.moneynote.ui.Category
+import com.example.moneynote.ui.expenseCategories
 import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
 fun DonutChart(
     data: List<ChartData>,
+    categoryList: List<Category>,
     type: String,
     modifier: Modifier = Modifier,
     gapDegrees: Float = 2f
@@ -146,6 +149,7 @@ fun DonutChartPreview() {
         DonutChart(
             data = mockData,
             type = "expense",
+            categoryList = expenseCategories,
             gapDegrees = 4f
         )
     }

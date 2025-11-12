@@ -47,6 +47,7 @@ import com.example.moneynote.ui.formatCurrency
 import com.example.moneynote.ui.incomeCategories
 import com.example.moneynote.ui.theme.NegativeRed
 import com.example.moneynote.ui.theme.PositiveGreen
+import com.example.moneynote.ui.Category
 import java.util.Date
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.moneynote.ui.theme.MoneyNoteTheme
@@ -64,6 +65,8 @@ fun ReportScreen(viewModel: ReportViewModel) {
         accounts = accounts,
         reportState = reportState,
         selectedAccountId = selectedAccountId,
+        expenseCategories = expenseCategories,
+        incomeCategories = incomeCategories,
         onChangeMonth = { viewModel.changeMonth(it) },
         onAccountSelected = { viewModel.selectAccount(it) }
     )
@@ -76,6 +79,8 @@ fun ReportScreenContent(
     accounts: List<Account>,
     reportState: ReportUiState,
     selectedAccountId: Long,
+    expenseCategories: List<Category>,
+    incomeCategories: List<Category>,
     onChangeMonth: (Int) -> Unit,
     onAccountSelected: (Long) -> Unit
 ) {
@@ -145,6 +150,7 @@ fun ReportScreenContent(
         Box(modifier = Modifier.weight(1f)) {
             val data = if (selectedTab == 0) reportState.expenseChartData else reportState.incomeChartData
             val type = if (selectedTab == 0) "expense" else "income"
+            val categoryList = if (type == "expense") expenseCategories else incomeCategories
 
             if (data.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -156,6 +162,7 @@ fun ReportScreenContent(
                     item {
                         DonutChart(
                             data = data,
+                            categoryList= categoryList,
                             type = type,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
@@ -166,7 +173,7 @@ fun ReportScreenContent(
 
                     // Danh sách chi tiết
                     items(data) { chartData ->
-                        ReportCategoryRow(data = chartData, type = type)
+                        ReportCategoryRow(data = chartData, type = type, categoryList = categoryList)
                     }
                 }
             }
@@ -177,7 +184,7 @@ fun ReportScreenContent(
 
 // #### HÀM COMPOSABLE PHỤ ####
 @Composable
-fun ReportCategoryRow(data: ChartData, type: String) {
+fun ReportCategoryRow(data: ChartData, type: String, categoryList: List<Category>) {
     val categoryList = if (type == "expense") expenseCategories else incomeCategories
     val category = categoryList.find { it.name == data.category }
     val icon = category?.icon ?: Icons.Default.QuestionMark
@@ -252,6 +259,8 @@ fun ReportScreenPreview() {
             accounts = mockAccounts,
             reportState = mockReportState,
             selectedAccountId = 0L,
+            expenseCategories = expenseCategories,
+            incomeCategories = incomeCategories,
             onChangeMonth = {},
             onAccountSelected = {}
         )

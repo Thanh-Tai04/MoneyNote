@@ -64,6 +64,9 @@ import com.example.moneynote.ui.theme.MoneyNoteTheme
 import com.example.moneynote.ui.theme.MutedGray
 import com.example.moneynote.ui.theme.NegativeRed
 import com.example.moneynote.ui.theme.PositiveGreen
+import com.example.moneynote.ui.Category
+import com.example.moneynote.ui.expenseCategories
+import com.example.moneynote.ui.incomeCategories
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -94,6 +97,8 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
         accounts = accounts,
         selectedAccountId = selectedAccountId,
         selectedDay = selectedDay,
+        expenseCategories = expenseCategories,
+        incomeCategories = incomeCategories,
         onAccountSelected = { viewModel.selectAccount(it) },
         onChangeMonth = { viewModel.changeMonth(it) },
         onDaySelected = { viewModel.onDaySelected(it) }
@@ -108,6 +113,8 @@ fun CalendarScreenContent(
     accounts: List<Account>,
     selectedAccountId: Long,
     selectedDay: Date,
+    expenseCategories: List<Category>,
+    incomeCategories: List<Category>,
     onAccountSelected: (Long) -> Unit,
     onChangeMonth: (Int) -> Unit,
     onDaySelected: (Date) -> Unit
@@ -322,7 +329,9 @@ fun CalendarScreenContent(
                         val accountName = accounts.find { it.id == transaction.accountId }?.name ?: "Không rõ"
                         TransactionRow(
                             transaction = transaction,
-                            accountName = accountName
+                            accountName = accountName,
+                            expenseCategories = expenseCategories,
+                            incomeCategories = incomeCategories
                         )
                     }
                 }
@@ -386,7 +395,8 @@ fun SummaryItem(title: String, amount: Double, color: Color) {
 
 // Một hàng giao dịch
 @Composable
-fun TransactionRow(transaction: Transaction, accountName: String) {
+fun TransactionRow(transaction: Transaction, accountName: String, expenseCategories: List<Category>,
+                   incomeCategories: List<Category>) {
     val category = (expenseCategories + incomeCategories).find { it.name == transaction.category }
     val icon = category?.icon ?: Icons.Default.QuestionMark
     val tint = category?.color ?: MaterialTheme.colorScheme.onSurfaceVariant
@@ -517,6 +527,8 @@ fun CalendarScreenPreview() {
             accounts = mockAccounts,
             selectedAccountId = 0L,
             selectedDay = Date(),
+            expenseCategories = expenseCategories, // <-- SỬA: Dùng list hardcoded
+            incomeCategories = incomeCategories,
             onAccountSelected = {},
             onChangeMonth = {},
             onDaySelected = {}

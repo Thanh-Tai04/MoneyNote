@@ -2,9 +2,9 @@ package com.example.moneynote.ui.screens
 
 // TẤT CẢ IMPORT CẦN THIẾT
 import com.example.moneynote.ui.Category
-import com.example.moneynote.ui.formatCurrency
-import com.example.moneynote.ui.incomeCategories
 import com.example.moneynote.ui.expenseCategories
+import com.example.moneynote.ui.incomeCategories
+import com.example.moneynote.ui.formatCurrency
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -90,6 +90,8 @@ fun AddTransactionScreen(
 
     AddTransactionScreenContent(
         accounts = accounts,
+        expenseCategories = expenseCategories,
+        incomeCategories = incomeCategories,
         navController = navController,
         snackbarHostState = snackbarHostState,
         scope = scope,
@@ -104,6 +106,8 @@ fun AddTransactionScreen(
 @Composable
 fun AddTransactionScreenContent(
     accounts: List<Account>,
+    expenseCategories: List<Category>,
+    incomeCategories: List<Category>,
     navController: NavHostController,
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
@@ -250,18 +254,6 @@ fun AddTransactionScreenContent(
                     onClick = { selectedCategory = category }
                 )
             }
-
-            item {
-                val editCategory = Category("Chỉnh sửa", Icons.Default.MoreHoriz, MutedGray)
-                CategoryItem(
-                    category = editCategory,
-                    isSelected = false,
-                    onClick = {
-                        // Điều hướng đến màn hình quản lý
-                        navController.navigate("category_management")
-                    }
-                )
-            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -388,6 +380,8 @@ fun AddTransactionScreenPreview() {
 
         AddTransactionScreenContent(
             accounts = mockAccounts,
+            expenseCategories = expenseCategories,
+            incomeCategories = incomeCategories,
             navController = rememberNavController(),
             snackbarHostState = remember { SnackbarHostState() },
             scope = rememberCoroutineScope(),

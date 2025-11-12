@@ -36,8 +36,6 @@ import com.example.moneynote.MoneyNoteApplication
 import com.example.moneynote.ui.screens.AddTransactionScreen
 import com.example.moneynote.ui.screens.BudgetScreen
 import com.example.moneynote.ui.screens.CalendarScreen
-import com.example.moneynote.ui.screens.CategoryManagementScreen
-import com.example.moneynote.ui.screens.CreateCategoryScreen
 import com.example.moneynote.ui.screens.ReportScreen
 import com.example.moneynote.ui.theme.MoneyNoteTheme
 
@@ -175,17 +173,6 @@ fun NavigationGraph(
         composable(BottomNavItem.Budget.route) {
             val budgetViewModel: BudgetViewModel = viewModel(factory = budgetFactory)
             BudgetScreen(viewModel = budgetViewModel)
-        }
-
-        // 6. THÊM 2 ROUTE (ĐƯỜNG DẪN) MỚI
-        composable("category_management") {
-            // Màn hình này cần NavController để quay lại (Back)
-            // và để điều hướng đến "create_category"
-            CategoryManagementScreen(navController = navController)
-        }
-        composable("create_category") {
-            // Màn hình này cần NavController để quay lại (Back)
-            CreateCategoryScreen(navController = navController)
         }
     }
 }

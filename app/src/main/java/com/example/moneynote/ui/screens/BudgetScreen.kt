@@ -68,6 +68,7 @@ fun BudgetScreen(viewModel: BudgetViewModel) {
     BudgetScreenContent(
         selectedDate = selectedDate,
         budgetState = budgetState,
+        expenseCategories = expenseCategories,
         onChangeMonth = { viewModel.changeMonth(it) },
         onSetBudget = { category, amount -> viewModel.setBudget(category, amount) }
     )
@@ -78,6 +79,7 @@ fun BudgetScreen(viewModel: BudgetViewModel) {
 fun BudgetScreenContent(
     selectedDate: Date,
     budgetState: BudgetUiState,
+    expenseCategories: List<Category>,
     onChangeMonth: (Int) -> Unit,
     onSetBudget: (String, Double) -> Unit
 ) {
@@ -148,6 +150,7 @@ fun BudgetScreenContent(
                 items(budgetState.budgetItems) { budgetItem ->
                     BudgetRow(
                         item = budgetItem,
+                        expenseCategories = expenseCategories,
                         onClick = {
                             selectedCategory = budgetItem.category
                             budgetAmount = budgetItem.limitAmount.toLong().toString()
@@ -166,6 +169,7 @@ fun BudgetScreenContent(
             category = selectedCategory,
             amount = budgetAmount,
             isEditing = isEditing,
+            expenseCategories = expenseCategories,
             onAmountChange = { budgetAmount = it },
             onCategoryChange = { selectedCategory = it },
             onDismiss = { showDialog = false },
@@ -182,7 +186,7 @@ fun BudgetScreenContent(
 
 // Composable cho một hàng Ngân sách
 @Composable
-fun BudgetRow(item: BudgetItem, onClick: () -> Unit) {
+fun BudgetRow(item: BudgetItem, expenseCategories: List<Category>, onClick: () -> Unit) {
     // TÌM CATEGORY ĐỂ LẤY ICON VÀ MÀU
     val category = expenseCategories.find { it.name == item.category }
         ?: Category("Khác", Icons.Default.QuestionMark, MaterialTheme.colorScheme.onSurfaceVariant)
@@ -267,6 +271,7 @@ fun SetBudgetDialog(
     category: String,
     amount: String,
     isEditing: Boolean,
+    expenseCategories: List<Category>,
     onAmountChange: (String) -> Unit,
     onCategoryChange: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -362,6 +367,7 @@ fun BudgetScreenPreview() {
         BudgetScreenContent(
             selectedDate = Date(),
             budgetState = mockBudgetState,
+            expenseCategories = expenseCategories,
             onChangeMonth = {},
             onSetBudget = { _, _ -> }
         )

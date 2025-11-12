@@ -10,7 +10,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import androidx.room.Room // <-- THÊM DÒNG NÀY
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
@@ -32,9 +32,8 @@ class Converters {
     fun dateToTimestamp(date: Date?): Long? {
         return date?.time
     }
-}
 
-// #### 2. CÁC BẢNG DỮ LIỆU (ENTITIES) ####
+}
 
 @Entity(tableName = "accounts")
 data class Account(
@@ -55,7 +54,7 @@ data class Transaction(
     val type: String, // "expense" or "income"
     val date: Date,
     val amount: Double,
-    val category: String,
+    val category: String, // Tên danh mục (Hardcoded)
     val note: String?,
     @ColumnInfo(name = "account_id")
     val accountId: Long // Foreign key to Account
@@ -68,21 +67,17 @@ data class Budget(
     @ColumnInfo(name = "month_year")
     val monthYear: String, // Format: "YYYY-MM"
     @ColumnInfo(name = "category_name")
-    val categoryName: String,
+    val categoryName: String, // Tên danh mục (Hardcoded)
     @ColumnInfo(name = "limit_amount")
     val limitAmount: Double
 )
-
-// #### 3. DAO (DATA ACCESS OBJECTS) ####
 
 @Dao
 interface AccountDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateAccount(account: Account)
-
     @Delete
     suspend fun deleteAccount(account: Account)
-
     @Query("SELECT * FROM accounts")
     fun getAllAccounts(): Flow<List<Account>>
 }
@@ -91,23 +86,17 @@ interface AccountDao {
 interface TransactionDao {
     @Insert
     suspend fun insertTransaction(transaction: Transaction)
-
-    // SỬA: Room tự động chuyển đổi Date sang Long, nên tham số phải là Date
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getTransactionsBetweenDates(startDate: Date, endDate: Date): Flow<List<Transaction>>
-
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate AND account_id = :accountId ORDER BY date DESC")
     fun getTransactionsBetweenDates(startDate: Date, endDate: Date, accountId: Long): Flow<List<Transaction>>
 }
-
 @Dao
 interface BudgetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateBudget(budget: Budget)
-
     @Query("SELECT * FROM budgets WHERE month_year = :monthYear")
     fun getBudgetsForMonth(monthYear: String): Flow<List<Budget>>
-
     @Query("SELECT * FROM budgets WHERE month_year = :monthYear AND category_name = :categoryName")
     suspend fun getBudgetForCategory(monthYear: String, categoryName: String): Budget?
 }
@@ -116,7 +105,7 @@ interface BudgetDao {
 
 @Database(
     entities = [Account::class, Transaction::class, Budget::class],
-    version = 1,
+    version = 1, // (Giữ nguyên, nhưng phải Clear Data)
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -131,37 +120,21 @@ abstract class AppDatabase : RoomDatabase() {
     ) : RoomDatabase.Callback() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            // Lấy instance database (sau khi nó đã được tạo)
             INSTANCE?.let { database ->
-                // Khởi chạy coroutine để thêm dữ liệu mặc định
                 scope.launch(Dispatchers.IO) {
                     populateDatabase(database.accountDao())
                 }
             }
         }
 
-        // Hàm helper để thêm dữ liệu
         suspend fun populateDatabase(accountDao: AccountDao) {
-            // Thêm tài khoản "Tiền mặt"
-            accountDao.insertOrUpdateAccount(
-                Account(
-                    name = "Tiền mặt",
-                    initialBalance = 0.0,
-                    iconName = "wallet",
-                    color = "#4CAF50"
-                )
-            )
-            // Thêm tài khoản "Ngân hàng"
-            accountDao.insertOrUpdateAccount(
-                Account(
-                    name = "Ngân hàng",
-                    initialBalance = 0.0,
-                    iconName = "account_balance",
-                    color = "#2196F3"
-                )
-            )
+            // Thêm tài khoản mặc định
+            accountDao.insertOrUpdateAccount(Account(name = "Tiền mặt", initialBalance = 0.0, iconName = "wallet", color = "#4CAF50"))
+            accountDao.insertOrUpdateAccount(Account(name = "Ngân hàng", initialBalance = 0.0, iconName = "account_balance", color = "#2196F3"))
+
         }
     }
+
 
     companion object {
         @Volatile
@@ -174,6 +147,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "money_note_database"
                 )
+                    // Dòng này sẽ xóa DB cũ (có Bảng Category)
                     .fallbackToDestructiveMigration()
                     .addCallback(MoneyNoteDatabaseCallback(scope))
                     .build()
