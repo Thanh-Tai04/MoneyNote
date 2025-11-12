@@ -68,7 +68,7 @@ fun DonutChart(
                 )
 
                 // Chỉ vẽ nhãn nếu >5%
-                if (chartData.percentage > 0.05f) {
+                if (chartData.percentage > 0.049f) {
                     val angleRad = Math.toRadians(middleAngle.toDouble())
                     val startX = centerX + (outerRadius * cos(angleRad)).toFloat()
                     val startY = centerY + (outerRadius * sin(angleRad)).toFloat()
