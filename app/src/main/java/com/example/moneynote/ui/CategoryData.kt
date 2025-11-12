@@ -31,7 +31,6 @@ val expenseCategories = listOf(
     Category("Mua sắm", Icons.Default.ShoppingCart, Color(0xFFEC407A)), // Pink
     Category("Y tế", Icons.Default.LocalHospital, Color(0xFFEF5350)), // Red
     Category("Giáo dục", Icons.Default.School, Color(0xFF26A69A)), // Teal
-    Category("Khác", Icons.Default.QuestionMark, Color(0xFFBDBDBD)) // Gray
 )
 
 // Gán màu cho các danh mục thu nhập
@@ -39,5 +38,4 @@ val incomeCategories = listOf(
     Category("Tiền lương", Icons.Default.Payments, PositiveGreen),
     Category("Tiền thưởng", Icons.Default.CardGiftcard, Color(0xFFFFD54F)), // Yellow
     Category("Đầu tư", Icons.Default.AccountBalance, Color(0xFF42A5F5)), // Blue
-    Category("Khác", Icons.Default.QuestionMark, Color(0xFFBDBDBD)) // Gray
 )
